@@ -10,6 +10,8 @@
     "author": "Aures TIC, Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/survey",
     "depends": ["survey"],
+    "application": False,
+    "installable": True,
     "data": [
         "security/ir.model.access.csv",
         "views/survey_question.xml",
