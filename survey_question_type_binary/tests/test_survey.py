@@ -97,7 +97,10 @@ class TestSurvey(common.SurveyCase):
         with open(module_icon, "rb") as img:
             cls.image_base64 = base64.b64encode(img.read())
         module_html = get_module_resource(
-            "survey_question_type_binary", "static", "description", "index.html"
+            "survey_question_type_binary",
+            "static",
+            "description",
+            "index.html",
         )
         with open(module_html, "rb") as file:
             cls.html = base64.b64encode(file.read())
@@ -112,28 +115,38 @@ class TestSurvey(common.SurveyCase):
             {self.question_binary.id: self.question_binary.constr_error_msg},
         )
         self.assertEqual(
-            self.question_binary.validate_question({"data": "This is not a file"}),
+            self.question_binary.validate_question(
+                {"data": "This is not a file"},
+            ),
             {self.question_binary.id: "This is not a file"},
         )
+        q_max_filesize_err = f"The file cannot exceed {1 / 1024}MB in size."
         self.assertEqual(
-            self.question_binary.validate_question({"data": self.image_base64}),
-            {self.question_binary.id: f"The file cannot exceed {1 / 1024}MB in size."},
+            self.question_binary.validate_question(
+                {"data": self.image_base64},
+            ),
+            {self.question_binary.id: q_max_filesize_err},
         )
-        self.question_binary.max_filesize = 2097152  # Increse to 2.0MB
+        self.question_binary.max_filesize = 2097152  # Increase to 2.0MB
+        q_invalid_mime_type_err = "Only files with {} mime types are allowed."
         self.assertEqual(
-            self.question_binary.validate_question({"data": self.image_base64}),
+            self.question_binary.validate_question(
+                {"data": self.image_base64},
+            ),
             {
-                self.question_binary.id: "Only files with {} mime types are allowed.".format(
-                    "application/pdf"
-                )
+                self.question_binary.id: q_invalid_mime_type_err.format(
+                    "application/pdf",
+                ),
             },
         )
 
     def test_02_question_binary_with_valid_values(self):
-        self.question_binary.max_filesize = 2097152  # Increse to 2.0MB
+        self.question_binary.max_filesize = 2097152  # Increase to 2.0MB
         self.question_binary.allowed_filemimetypes = "image/png"
         self.assertEqual(
-            self.question_binary.validate_question({"data": self.image_base64}),
+            self.question_binary.validate_question(
+                {"data": self.image_base64},
+            ),
             {},
         )
         self.user_input1.save_lines(

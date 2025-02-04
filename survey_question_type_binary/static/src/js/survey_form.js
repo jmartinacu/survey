@@ -41,7 +41,7 @@ odoo.define("survey_question_type_binary", function (require) {
         },
         _readFileAsDataURL: function (file) {
             return $.Deferred(function (deferred) {
-                $.extend(new FileReader(), {
+                $.extend(new globalThis.FileReader(), {
                     onload: function (e) {
                         var sDataURL = e.target.result;
                         deferred.resolve(sDataURL);
@@ -55,16 +55,16 @@ odoo.define("survey_question_type_binary", function (require) {
         _submitForm: function (options) {
             const self = this;
             const params = {};
-            const binaryPrimises = this._getSubmitBinariesValues(params);
-            if (binaryPrimises.length > 0 && !this.options.isStartScreen) {
+            const binaryPromises = this._getSubmitBinariesValues(params);
+            if (binaryPromises.length > 0 && !this.options.isStartScreen) {
                 const $form = this.$("form");
-                const formData = new FormData($form[0]);
+                const formData = new globalThis.FormData($form[0]);
 
                 if (options.previousPageId) {
                     params.previous_page_id = options.previousPageId;
                 }
                 this._prepareSubmitValues(formData, params);
-                Promise.all(binaryPrimises).then(function () {
+                Promise.all(binaryPromises).then(function () {
                     const submitPromise = self._rpc({
                         route: _.str.sprintf(
                             "%s/%s/%s",

@@ -3,7 +3,7 @@
 import base64
 import contextlib
 
-from odoo import _, fields, models
+from odoo import fields, models
 from odoo.tools.mimetypes import guess_mimetype
 
 
@@ -17,7 +17,8 @@ class SurveyQuestion(models.Model):
         ]
     )
     allowed_filemimetypes = fields.Char(
-        help="File mime types separated by commas (E.g: image/png,image/jpeg). "
+        help="File mime types separated by commas "
+        "(E.g: image/png,image/jpeg). "
         "Leave empty to allow any value.",
     )
     max_filesize = fields.Integer(
@@ -29,7 +30,10 @@ class SurveyQuestion(models.Model):
     def validate_question(self, answer, comment=None):
         if self.question_type in ("binary", "multi_binary"):
             return self.validate_binary(answer)
-        return super(SurveyQuestion, self).validate_question(answer, comment=comment)
+        return super().validate_question(
+            answer,
+            comment=comment,
+        )
 
     def validate_binary(self, answers):
         self.ensure_one()
@@ -38,16 +42,26 @@ class SurveyQuestion(models.Model):
         if self.constr_mandatory and not answers:
             errors.update({self.id: self.constr_error_msg})
         if answers:
-            if not isinstance(answers, (list, tuple)):
+            if not isinstance(answers, list | tuple):
                 answers = [answers]
             for answer in answers:
                 try:
                     data = answer.get("data")
                     filesize = (
-                        data and (len(data) * 3) / 4 - str(data).count("=", -2) or 0
+                        data
+                        and (len(data) * 3) / 4
+                        - str(data).count(
+                            "=",
+                            -2,
+                        )
+                        or 0
                     )
                     filemimetype = (
-                        data and guess_mimetype(base64.b64decode(data)) or False
+                        data
+                        and guess_mimetype(
+                            base64.b64decode(data),
+                        )
+                        or False
                     )
                     answer.update(
                         {
@@ -67,19 +81,24 @@ class SurveyQuestion(models.Model):
                             self.allowed_filemimetypes
                             and filemimetype not in self.allowed_filemimetypes
                         ):
+                            error_invalid_mimetype_msg = self.env._(
+                                "Only files with %s mime types are allowed.",
+                            )
                             errors.update(
                                 {
-                                    self.id: _(
-                                        "Only files with {} mime types are allowed."
-                                    ).format(self.allowed_filemimetypes)
-                                }
+                                    self.id: error_invalid_mimetype_msg
+                                    % self.allowed_filemimetypes
+                                },
                             )
                         if self.max_filesize and filesize > self.max_filesize:
                             errors.update(
                                 {
-                                    self.id: _(
-                                        "The file cannot exceed {}MB in size."
-                                    ).format(self.max_filesize / 1024 / 1024)
+                                    self.id: self.env._(
+                                        "The file cannot exceed %sMB in size."
+                                    )
+                                    % self.max_filesize
+                                    / 1024
+                                    / 1024
                                 }
                             )
         return errors

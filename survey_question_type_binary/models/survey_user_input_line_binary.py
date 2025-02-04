@@ -55,7 +55,11 @@ class SurveyUserInputLineBinary(models.Model):
             input_line.value_binary_type = guess_mimetype(
                 base64.b64decode(input_line.value_binary)
             )
-            input_line.value_binary_size = (len(input_line.value_binary) * 3) / 4 - str(
-                input_line.value_binary
-            ).count("=", -2)
-            input_line.is_binary_image = input_line.value_binary_type in VALID_MIMETYPES
+            input_line.value_binary_size = (
+                len(
+                    input_line.value_binary,
+                )
+                * 3
+            ) / 4 - str(input_line.value_binary).count("=", -2)
+            is_binary_image = input_line.value_binary_type in VALID_MIMETYPES
+            input_line.is_binary_image = is_binary_image

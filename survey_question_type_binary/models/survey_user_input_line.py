@@ -1,6 +1,6 @@
 # Copyright 2023 Jose Zambudio - Aures Tic <jose@aurestic.es>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-from odoo import _, api, fields, models
+from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 
 
@@ -28,8 +28,10 @@ class SurveyUserInputLine(models.Model):
             super_check -= line
             field_name = "answer_binary_ids"
             if field_name and not line[field_name]:
-                raise ValidationError(_("The answer must be in the right type"))
-        return super(SurveyUserInputLine, super_check)._check_answer_type_skipped()
+                raise ValidationError(
+                    self.env._("The answer must be in the right type"),
+                )
+        return super()._check_answer_type_skipped()
 
     @api.constrains(
         "question_id",
@@ -45,14 +47,16 @@ class SurveyUserInputLine(models.Model):
             ):
                 continue
             for answer_binary in rec.answer_binary_ids:
+                binary_size = answer_binary.value_binary_size
                 if (
                     rec.question_id.max_filesize
-                    and rec.question_id.max_filesize < answer_binary.value_binary_size
+                    and rec.question_id.max_filesize < binary_size
                 ):
                     raise ValidationError(
-                        _("The file cannot exceed {}MB in size.").format(
-                            rec.question_id.max_filesize / 1024 / 1024
-                        )
+                        self.env._("The file cannot exceed %sMB in size.")
+                        % rec.question_id.max_filesize
+                        / 1024
+                        / 1024
                     )
                 if (
                     rec.question_id.allowed_filemimetypes
@@ -60,9 +64,10 @@ class SurveyUserInputLine(models.Model):
                     not in rec.question_id.allowed_filemimetypes
                 ):
                     raise ValidationError(
-                        _("Only files with {} mime types are allowed.").format(
-                            rec.question_id.allowed_filemimetypes
+                        self.env._(
+                            "Only files with %s mime types are allowed.",
                         )
+                        % rec.question_id.allowed_filemimetypes
                     )
 
     def _compute_display_name(self):
@@ -71,5 +76,7 @@ class SurveyUserInputLine(models.Model):
             if line.answer_type == "binary" and line.answer_binary_ids:
                 line.display_name = line.answer_binary_ids.filename
             if line.answer_type == "multi_binary" and line.answer_binary_ids:
-                line.display_name = _("%s File(s)") % len(line.answer_binary_ids)
+                line.display_name = self.env._("%s File(s)") % len(
+                    line.answer_binary_ids
+                )
         return True
